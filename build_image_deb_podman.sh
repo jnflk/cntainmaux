@@ -1,0 +1,1 @@
+podman build --pull-always --tag cntainmaux_deb:v0.1 --file container_images/BUILDFILE_DEB container_images

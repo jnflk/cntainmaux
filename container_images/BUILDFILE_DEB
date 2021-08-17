@@ -1,0 +1,56 @@
+# default DEB distro.
+ARG REPO_BASE=docker.io/ubuntu
+ARG REPO_TAG=focal
+
+FROM ${REPO_BASE}:${REPO_TAG}
+
+# only for fallback, if nothing else provided
+ENV CONTAINERMANN_USER=containermann
+ENV CONTAINERMANN_USER_ID=1000
+ENV CONTAINERMANN_GROUP_ID=1000
+
+ARG GOSU_VERSION=1.13
+
+# install dependencies
+# - generic stuff
+# - stuff for gosu
+RUN set -eux; \
+    apt-get update;\
+    DEBIAN_FRONTEND=noninteractive apt-get install -y locales \
+    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && dpkg-reconfigure --frontend=noninteractive locales \
+    && update-locale LANG=en_US.UTF-8; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y\
+        vim \
+        nano \
+        bash \
+        git \
+        htop \
+        sshfs \
+        python3 \
+        gnupg2 \
+        ca-certificates; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        curl \
+        dpkg; \
+    apt-get clean;
+
+ENV LANG en_US.UTF-8 
+ENV LC_ALL en_US.UTF-8
+
+####
+# install gosu
+####
+COPY additions/build_only/install_gosu.sh install_gosu.sh
+RUN set -eux; \
+    sh ./install_gosu.sh; \
+    rm install_gosu.sh; \
+    gosu --version;
+
+COPY additions/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh;
+
+RUN mkdir /data
+WORKDIR /data
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

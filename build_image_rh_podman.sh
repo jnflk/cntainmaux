@@ -1,0 +1,1 @@
+podman build --tag cntainmaux_rh:v0.1 --file container_images/BUILDFILE_RH container_images

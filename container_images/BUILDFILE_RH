@@ -1,0 +1,48 @@
+# default Red Hat distro.
+ARG REPO_BASE=registry.fedoraproject.org/fedora
+ARG REPO_TAG=34
+
+FROM ${REPO_BASE}:${REPO_TAG}
+
+# only for fallback, if nothing else provided
+ENV CONTAINERMANN_USER=containermann
+ENV CONTAINERMANN_USER_ID=1000
+ENV CONTAINERMANN_GROUP_ID=1000
+
+ARG GOSU_VERSION=1.13
+
+# install dependencies
+# - generic stuff
+# - stuff for gosu
+RUN set -eux; \
+    dnf --assumeyes install \
+        vim \
+        nano \
+        bash \
+        git \
+        htop \
+        glibc-langpack-en \
+        sshfs \
+        python3 \
+        ca-certificates; \
+    dnf --assumeyes install \
+        curl \
+        dpkg; \
+    dnf clean all;
+    
+####
+# install gosu
+####
+COPY additions/build_only/install_gosu.sh install_gosu.sh
+RUN set -eux; \
+    sh ./install_gosu.sh; \
+    rm install_gosu.sh; \
+    gosu --version;
+
+COPY additions/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh;
+
+RUN mkdir /data
+WORKDIR /data
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
